@@ -1,0 +1,35 @@
+{
+  "name": "platoria-print-agent",
+  "version": "1.0.0",
+  "description": "Platoria Local Windows Print Agent for TVS RP 3220 Star KOT Printing via SmartPOS Bridge",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "tsx tests/run-all.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "platoria",
+    "print-agent",
+    "escpos",
+    "smartpos",
+    "thermal-printer",
+    "kot"
+  ],
+  "author": "Platoria Engineering",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

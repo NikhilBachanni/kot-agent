@@ -1,0 +1,21 @@
+# Environment secrets
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+
+# Output
+dist/
+
+# Local logs
+logs/
+*.log
+
+# Single-instance lockfile
+.agent.lock
+
+# OS metadata
+.DS_Store
+Thumbs.db
