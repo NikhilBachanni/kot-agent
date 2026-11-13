@@ -31,6 +31,8 @@ export interface AgentConfig {
   smartposPorts: number[];
   printerName: string;
   pollIntervalMs: number;
+  maxEmptyPollIntervalMs: number;
+  emptyPollStepMs: number;
   httpTimeoutMs: number;
   maxAttempts: number;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
@@ -110,6 +112,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
   const smartposPorts = parsePortRange(env.SMARTPOS_PORT_RANGE || '8000-8010');
 
   const pollIntervalMs = Math.max(500, parseInt(env.POLL_INTERVAL_MS || '2000', 10) || 2000);
+  const maxEmptyPollIntervalMs = Math.max(
+    pollIntervalMs,
+    parseInt(env.MAX_EMPTY_POLL_INTERVAL_MS || '6000', 10) || 6000
+  );
+  const emptyPollStepMs = Math.max(250, parseInt(env.EMPTY_POLL_STEP_MS || '1000', 10) || 1000);
   const httpTimeoutMs = Math.max(2000, parseInt(env.HTTP_TIMEOUT_MS || '10000', 10) || 10000);
   const maxAttempts = Math.max(1, parseInt(env.MAX_ATTEMPTS || '3', 10) || 3);
 
@@ -137,6 +144,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     smartposPorts,
     printerName,
     pollIntervalMs,
+    maxEmptyPollIntervalMs,
+    emptyPollStepMs,
     httpTimeoutMs,
     maxAttempts,
     logLevel,

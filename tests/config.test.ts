@@ -17,6 +17,8 @@ console.log('--- Testing Config Module ---');
   assert.strictEqual(valid.printAgentToken, 'secret_token_12345678');
   assert.strictEqual(valid.printerName, 'TVS RP 3220 Star');
   assert.strictEqual(valid.pollIntervalMs, 2000);
+  assert.strictEqual(valid.maxEmptyPollIntervalMs, 6000);
+  assert.strictEqual(valid.emptyPollStepMs, 1000);
   assert.deepStrictEqual(valid.smartposPorts, [8000, 8001, 8002, 8003, 8004, 8005, 8080]);
   console.log('  ✓ Valid configuration parsed correctly');
 }

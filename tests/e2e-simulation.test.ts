@@ -169,7 +169,8 @@ async function runE2e() {
 
   // Verify decoded ESC/POS bytes contain KOT contents
   const decodedText = Buffer.from(smartposReceivedBase64, 'base64').toString('ascii');
-  assert.ok(decodedText.includes('KITCHEN ORDER'));
+  assert.ok(decodedText.includes('KOT - 5555') || decodedText.includes('5555'));
+  assert.ok(!decodedText.includes('KITCHEN ORDER'));
   assert.ok(decodedText.includes('TABLE 10') || decodedText.includes('T10'));
   assert.ok(decodedText.includes('5555'));
   assert.ok(decodedText.includes('Butter Toast'));

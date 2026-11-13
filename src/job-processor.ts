@@ -22,6 +22,7 @@ export class JobProcessor {
 
   private isRunning: boolean = false;
   private isProcessing: boolean = false;
+  private consecutiveEmptyPolls: number = 0;
   private loopTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
 
@@ -163,18 +164,27 @@ export class JobProcessor {
       this.retryPolicy.reset();
 
       if (!claimResult.job) {
-        // Queue is empty, poll again after regular interval
-        this.logger.debug('No pending KOT jobs. Waiting...');
-        nextDelay = this.config.pollIntervalMs;
+        // Queue is empty: adaptively back off up to maxEmptyPollIntervalMs (e.g. 5-8s)
+        this.consecutiveEmptyPolls++;
+        const adaptiveDelay = Math.min(
+          this.config.pollIntervalMs + (this.consecutiveEmptyPolls - 1) * this.config.emptyPollStepMs,
+          this.config.maxEmptyPollIntervalMs
+        );
+        this.logger.debug(
+          `No pending KOT jobs (empty streak: ${this.consecutiveEmptyPolls}). Next poll in ${(adaptiveDelay / 1000).toFixed(1)}s`
+        );
+        nextDelay = adaptiveDelay;
         return;
       }
 
-      // 3. Process claimed job
+      // 3. Process claimed job (reset empty streak upon finding work)
+      this.consecutiveEmptyPolls = 0;
       await this.processJob(claimResult.job);
 
       // If a job was just processed, check immediately for next job without delay
       nextDelay = 250;
     } catch (err: any) {
+      this.consecutiveEmptyPolls = 0;
       nextDelay = this.retryPolicy.nextDelayMs();
       this.logger.error(`Error in polling loop: ${err.message}. Backing off for ${Math.round(nextDelay / 1000)}s`);
     } finally {
