@@ -229,7 +229,7 @@ export class JobProcessor {
     let escposBytes: Buffer;
     try {
       escposBytes = formatKotToEscPos(payload, {
-        columns: 48,
+        columns: this.config.printerColumns || 48,
         restaurantName: 'SHAMBHU CAFE'
       });
       this.logger.info(`Generated ESC/POS binary stream (${escposBytes.length} bytes).`);

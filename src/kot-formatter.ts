@@ -19,6 +19,7 @@ import { KotPayload } from "./payload-validator";
 export interface KotFormatterOptions {
   columns?: number;
   restaurantName?: string; // Accepted for backwards compatibility
+  safeMarginRight?: number; // Inward margin for Qt column (prevents clipping on physical paper edge)
 }
 
 /**
@@ -29,6 +30,9 @@ export function formatKotToEscPos(
   options: KotFormatterOptions = {}
 ): Buffer {
   const columns = options.columns || 48;
+  // Safety margin on right: reserves 6 columns on 80mm (~10mm) so Qt & quantities stay comfortably inside printable head
+  const safeMarginRight = options.safeMarginRight ?? (columns >= 44 ? 6 : 4);
+  const tableWidth = Math.max(20, columns - safeMarginRight);
   const builder = new EscPosBuilder({ columns });
 
   // 1. Initialize printer
@@ -109,34 +113,43 @@ export function formatKotToEscPos(
   // 6. Dashed Divider
   builder.divider("-");
 
-  // 7. Column Headers: Item (left) ... Qt (right)
+  // 7. Column Headers: Item (left) ... Qt (right) positioned comfortably inside safe printable boundary
   builder.align("left").bold(true);
-  builder.rowTwoColumns("Item", "Qt");
+  builder.rowTwoColumns("Item", "Qt", tableWidth);
   builder.divider("-");
 
   // 8. Items List
   const QT_WIDTH = 4;
-  const ITEM_WIDTH = Math.max(12, columns - QT_WIDTH - 1);
+  const ITEM_WIDTH = Math.max(12, tableWidth - QT_WIDTH - 2);
 
-  for (const item of payload.items) {
+  for (let itemIdx = 0; itemIdx < payload.items.length; itemIdx++) {
+    const item = payload.items[itemIdx];
     const qtyStr = String(item.qty).trim();
     const nameLines = EscPosBuilder.wrapText(item.name, ITEM_WIDTH);
 
-    // First line with item name (left) and quantity (right)
-    builder.bold(true).rowTwoColumns(nameLines[0], qtyStr);
+    // Item name and quantity: slightly larger (double height GS ! 0x01) and bold, matching POS KOT styling
+    builder.size(1, 2).bold(true);
+    builder.rowTwoColumns(nameLines[0], qtyStr, tableWidth);
 
-    // Subsequent lines of wrapped item name
+    // Subsequent lines of wrapped item name (also prominent)
     for (let i = 1; i < nameLines.length; i++) {
-      builder.bold(true).textLine(nameLines[i]);
+      builder.textLine(nameLines[i]);
     }
+
+    // Reset character size to normal for instructions/notes
+    builder.normalSize().bold(false);
 
     // Item-specific instructions/notes (if any)
     if (item.notes) {
-      const noteLines = EscPosBuilder.wrapText(`* ${item.notes}`, ITEM_WIDTH);
-      builder.bold(false);
+      const noteLines = EscPosBuilder.wrapText(`* ${item.notes}`, tableWidth);
       for (const nl of noteLines) {
         builder.textLine(`  ${nl}`);
       }
+    }
+
+    // Spacing between dishes to match POS KOT layout
+    if (itemIdx < payload.items.length - 1) {
+      builder.lineFeed(1);
     }
   }
 

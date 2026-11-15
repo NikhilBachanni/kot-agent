@@ -54,6 +54,9 @@ const samplePayload: KotPayload = {
   assert.ok(!textOutput.includes("Rahul Sharma"), "Must NOT contain customer name");
   assert.ok(!textOutput.includes("Platoria KOT Job"), "Must NOT contain Platoria footer");
 
+  // Verify prominent double-height item font (GS ! 0x01: 1D 21 01)
+  assert.ok(buffer.includes(Buffer.from([0x1d, 0x21, 0x01])), "Must use double-height font for items");
+
   console.log("  ✓ Standard ultra-compact KOT generated correctly with table, items, notes and zero fluff/pricing");
 }
 

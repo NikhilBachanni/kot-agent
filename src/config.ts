@@ -30,6 +30,7 @@ export interface AgentConfig {
   smartposAutoPortDiscovery: boolean;
   smartposPorts: number[];
   printerName: string;
+  printerColumns?: number;
   pollIntervalMs: number;
   maxEmptyPollIntervalMs: number;
   emptyPollStepMs: number;
@@ -105,6 +106,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     errors.push('PRINTER_NAME is required (e.g. TVS RP 3220 Star)');
   }
 
+  const printerColumns = Math.max(20, Math.min(80, parseInt(env.PRINTER_COLUMNS || '48', 10) || 48));
+
   const printAgentId = (env.PRINT_AGENT_ID || `win-pc-${process.env.COMPUTERNAME || 'pos-01'}`).trim();
 
   const smartposBaseUrl = (env.SMARTPOS_BASE_URL || 'http://127.0.0.1:8003').trim().replace(/\/+$/, '');
@@ -143,6 +146,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     smartposAutoPortDiscovery,
     smartposPorts,
     printerName,
+    printerColumns,
     pollIntervalMs,
     maxEmptyPollIntervalMs,
     emptyPollStepMs,
