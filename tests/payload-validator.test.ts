@@ -136,3 +136,37 @@ console.log('--- Testing Payload Validator Module ---');
   assert.strictEqual(reprint.payload?.reprintInfo?.reason, 'Barista dropped ticket');
   console.log('  ✓ Reprint information verified and parsed');
 }
+
+// 8. Item add-ons parsed cleanly while staying schemaVersion 1.0 compatible
+{
+  const withAddons = validateClaimedJobPayload({
+    schemaVersion: '1.0',
+    jobId: 'job-addons-1',
+    orderId: 'order-addons-1',
+    orderNumber: 2050,
+    source: 'POS',
+    table: 'T2',
+    items: [
+      {
+        name: 'Americano',
+        qty: 2,
+        addons: [
+          { id: 'addon_irish', name: 'Irish Flavour', price: 40 },
+          { name: '  Extra Shot  ' },
+          { invalid: true }
+        ],
+        notes: '+ Irish Flavour, + Extra Shot'
+      }
+    ]
+  });
+
+  assert.strictEqual(withAddons.valid, true);
+  assert.strictEqual(withAddons.payload?.items[0].addons?.length, 2);
+  assert.deepStrictEqual(withAddons.payload?.items[0].addons?.[0], {
+    id: 'addon_irish',
+    name: 'Irish Flavour',
+    price: 40
+  });
+  assert.strictEqual(withAddons.payload?.items[0].addons?.[1].name, 'Extra Shot');
+  console.log('  ✓ Item add-ons parsed and normalized without breaking schemaVersion 1.0');
+}

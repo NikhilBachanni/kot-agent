@@ -136,12 +136,31 @@ export function formatKotToEscPos(
       builder.textLine(nameLines[i]);
     }
 
-    // Reset character size to normal for instructions/notes
+    // Reset character size to normal for add-ons and instructions/notes
     builder.normalSize().bold(false);
 
-    // Item-specific instructions/notes (if any)
-    if (item.notes) {
-      const noteLines = EscPosBuilder.wrapText(`* ${item.notes}`, tableWidth);
+    // Item-specific add-ons / modifiers (compact layout, zero prices on KOT)
+    const addonNames: string[] = [];
+    if (Array.isArray(item.addons)) {
+      for (const addon of item.addons) {
+        if (addon && typeof addon.name === "string" && addon.name.trim()) {
+          addonNames.push(addon.name.trim());
+        }
+      }
+    }
+
+    const autoAddonSummary = addonNames.map((n) => `+ ${n}`).join(", ");
+    if (autoAddonSummary) {
+      const addonLines = EscPosBuilder.wrapText(autoAddonSummary, Math.max(12, tableWidth - 2));
+      for (const al of addonLines) {
+        builder.textLine(`  ${al}`);
+      }
+    }
+
+    // Item-specific instructions/notes (skip if identical to auto-generated "+ Addon" summary)
+    const rawNote = typeof item.notes === "string" ? item.notes.trim() : "";
+    if (rawNote && rawNote !== autoAddonSummary) {
+      const noteLines = EscPosBuilder.wrapText(`* ${rawNote}`, Math.max(12, tableWidth - 2));
       for (const nl of noteLines) {
         builder.textLine(`  ${nl}`);
       }

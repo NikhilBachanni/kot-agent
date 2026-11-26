@@ -96,3 +96,38 @@ const samplePayload: KotPayload = {
   assert.ok(textOutput.includes("Printer jammed previously"), "Must include reprint reason");
   console.log("  ✓ Reprint ticket includes prominent REPRINT warning and audit reason");
 }
+
+// 4. Item add-ons formatted underneath item with zero prices & no duplicate auto-note
+{
+  const addonPayload: KotPayload = {
+    ...samplePayload,
+    customerNotes: undefined,
+    items: [
+      {
+        name: "Americano",
+        qty: 2,
+        addons: [
+          { id: "a1", name: "Irish Flavour", price: 40 },
+          { id: "a2", name: "Extra Shot", price: 50 }
+        ],
+        notes: "+ Irish Flavour, + Extra Shot"
+      },
+      {
+        name: "Cold Coffee",
+        qty: 1,
+        addons: [{ id: "a3", name: "Hazelnut", price: 40 }],
+        notes: "Less ice"
+      }
+    ]
+  };
+
+  const buffer = formatKotToEscPos(addonPayload, { columns: 48 });
+  const textOutput = buffer.toString("ascii");
+
+  assert.ok(textOutput.includes("+ Irish Flavour, + Extra Shot"), "Must include item add-ons beneath item");
+  assert.strictEqual(textOutput.match(/Irish Flavour/g)?.length, 1, "Must not duplicate auto-generated add-on summary note");
+  assert.ok(textOutput.includes("+ Hazelnut"), "Must include single item add-on");
+  assert.ok(textOutput.includes("* Less ice"), "Must still include custom item note alongside add-ons");
+  assert.ok(!textOutput.includes("40") && !textOutput.includes("50") && !textOutput.includes("360"), "Must NEVER print add-on or item prices on KOT");
+  console.log("  ✓ Item add-ons rendered compactly under items with zero prices and no duplicate notes");
+}

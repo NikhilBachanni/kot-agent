@@ -7,10 +7,17 @@
 
 export const SUPPORTED_SCHEMA_VERSION = '1.0';
 
+export interface KotAddon {
+  id?: string;
+  name: string;
+  price?: number;
+}
+
 export interface KotItem {
   name: string;
   qty: number;
   notes?: string;
+  addons?: KotAddon[];
 }
 
 export interface KotReprintInfo {
@@ -109,10 +116,28 @@ export function validateClaimedJobPayload(rawPayload: unknown): ValidationResult
       return { valid: false, error: `Item "${item.name}" has invalid quantity: ${item.qty}` };
     }
 
+    let validatedAddons: KotAddon[] | undefined;
+    if (Array.isArray(item.addons) && item.addons.length > 0) {
+      const parsedAddons: KotAddon[] = [];
+      for (const rawAddon of item.addons) {
+        if (rawAddon && typeof rawAddon === 'object' && typeof rawAddon.name === 'string' && rawAddon.name.trim()) {
+          parsedAddons.push({
+            id: typeof rawAddon.id === 'string' && rawAddon.id.trim() ? rawAddon.id.trim() : undefined,
+            name: rawAddon.name.trim(),
+            price: typeof rawAddon.price === 'number' && !isNaN(rawAddon.price) ? rawAddon.price : undefined
+          });
+        }
+      }
+      if (parsedAddons.length > 0) {
+        validatedAddons = parsedAddons;
+      }
+    }
+
     validatedItems.push({
       name: item.name.trim(),
       qty: Math.floor(qty),
-      notes: typeof item.notes === 'string' && item.notes.trim() ? item.notes.trim() : undefined
+      notes: typeof item.notes === 'string' && item.notes.trim() ? item.notes.trim() : undefined,
+      addons: validatedAddons
     });
   }
 
