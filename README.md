@@ -33,10 +33,11 @@ The agent runs as a dedicated background process on the restaurant's Windows PC.
 
 ### Lifecycle of a KOT Job:
 1. **Pre-flight Check:** Agent confirms SmartPOS loopback bridge is online on `127.0.0.1:8003` (or auto-discovers listening port 8000–8010) and verifies `TVS RP 3220 Star` is present in Windows spooler.
-2. **Claim (`POST /api/print-agent/claim`):** Claims one pending KOT job with a server lease.
-3. **Payload Validation:** Enforces strict JSON schema validation (`schemaVersion: "1.0"`).
-4. **Mark Printing (`POST /api/print-agent/jobs/:id/printing`):** Alerts server that printing is underway to extend lease and prevent duplicate claiming.
-5. **ESC/POS Generation:** Formats ticket for 48 columns (80mm thermal paper, Font A):
+2. **Sync Transport Config (`GET /api/print-agent/config`):** Periodically reads the active mode (`in_app` vs `dedicated_worker`) and target URL from the main Platoria app (default every `30000ms` via `CONFIG_REFRESH_INTERVAL_MS`).
+3. **Claim (`POST /api/print-agent/claim`):** Claims one pending KOT job with a server lease from the active endpoint (`PLATORIA_API_URL` in `in_app` mode, or dedicated Worker URL in `dedicated_worker` mode; heartbeat & health follow the same active endpoint).
+4. **Payload Validation:** Enforces strict JSON schema validation (`schemaVersion: "1.0"`).
+5. **Mark Printing (`POST /api/print-agent/printing`):** Alerts the main Platoria app that printing is underway to extend lease and prevent duplicate claiming.
+6. **ESC/POS Generation:** Formats ticket for 48 columns (80mm thermal paper, Font A):
    - Prominent Order # & Table identifier.
    - Clean tabular alignment: `QTY` and `ITEM`.
    - Modifiers & notes indented beneath items.
@@ -122,6 +123,7 @@ PRINT_AGENT_ID=restaurant-kitchen-01
 SMARTPOS_BASE_URL=http://127.0.0.1:8003
 PRINTER_NAME=TVS RP 3220 Star
 POLL_INTERVAL_MS=2000
+CONFIG_REFRESH_INTERVAL_MS=30000
 HTTP_TIMEOUT_MS=10000
 MAX_ATTEMPTS=3
 LOG_LEVEL=info

@@ -54,6 +54,11 @@ export class JobProcessor {
     this.logger.info(`Starting Platoria Print Agent [${this.config.printAgentId}]`);
     this.logger.info(`Target Printer: "${this.config.printerName}" | Polling interval: ${this.config.pollIntervalMs}ms`);
 
+    // Fetch initial transport configuration from main Platoria app
+    if (typeof (this.cloudflare as any).ensureFreshConfig === 'function') {
+      await (this.cloudflare as any).ensureFreshConfig(true);
+    }
+
     // Initial pre-flight check of local SmartPOS Bridge
     await this.verifyLocalPrinter();
 

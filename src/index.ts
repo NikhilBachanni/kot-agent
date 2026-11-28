@@ -98,6 +98,7 @@ async function main() {
     baseUrl: config.platoriaApiUrl,
     token: config.printAgentToken,
     timeoutMs: config.httpTimeoutMs,
+    configRefreshIntervalMs: config.configRefreshIntervalMs,
     logger
   });
 
